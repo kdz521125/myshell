@@ -1,1 +1,4 @@
 # myshell
+tar
+
+ls
