@@ -14,6 +14,9 @@
 #include<time.h>
 #include<errno.h>
 #include<stddef.h>
+#include <dirent.h>
+#include <errno.h>
+#include <sys/types.h>
 
 // 归档文件格式版本
 #define ARCHIVE_FORMAT_VERSION 0x0100  // 1.0
@@ -80,15 +83,28 @@ typedef struct {
     uint8_t reserved[32];  // 保留字段
 } FileEntry;
 
-// 归档上下文
+// 内部数据结构
 typedef struct {
-    FILE *fp;                  // 文件指针
-    ArchiveHeader header;      // 归档头
-    FileEntry *index;         // 索引表
-    size_t index_size;        // 索引大小
-    char *password;           // 密码（可选）
-    uint8_t *buffer;          // 缓冲区
-    size_t buffer_size;       // 缓冲区大小
+    ArchiveHeader header;
+    FileEntry *entries;
+    FILE *fp;
+    char *filename;
+    int is_modified;
+} ArchiveFile;
+
+// 扩展ArchiveContext
+typedef struct {
+    CompressionLevel compression_level;
+    char *password;
+    ProgressCallback progress_callback;
+    ErrorCallback error_callback;
+    FILE *log_file;
+    ArchiveFile *current_archive;
+    MemoryBuffer *write_buffer;
+
+    int recursive;  // 是否递归添加目录
+    char **exclude_patterns;  // 排除模式
+    int exclude_count;
 } ArchiveContext;
 
 

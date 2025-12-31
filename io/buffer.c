@@ -36,3 +36,15 @@ static int expand_buffer(MemoryBuffer *buf, size_t min_capacity) {
     buf->capacity = new_capacity;
     return 1;
 }
+
+// 写入数据到缓冲区
+static int write_to_buffer(MemoryBuffer *buf, const void *data, size_t size) {
+    if (buf->size + size > buf->capacity) {
+        if (!expand_buffer(buf, buf->size + size)) {
+            return 0;
+        }
+    }
+    memcpy(buf->buffer + buf->size, data, size);
+    buf->size += size;
+    return 1;
+}

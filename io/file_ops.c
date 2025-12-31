@@ -1,17 +1,6 @@
 #include "file_ops.h"
 
-// 写入数据到缓冲区
-static int write_to_buffer(MemoryBuffer *buf, const void *data, size_t size) {
-    if (buf->size + size > buf->capacity) {
-        if (!expand_buffer(buf, buf->size + size)) {
-            return 0;
-        }
-    }
-    
-    memcpy(buf->buffer + buf->size, data, size);
-    buf->size += size;
-    return 1;
-}
+
 
 // 计算CRC32校验和
 static uint32_t calculate_crc32(const uint8_t *data, size_t length) {
@@ -30,7 +19,6 @@ static uint32_t calculate_crc32(const uint8_t *data, size_t length) {
     //CRC取反
     return ~crc;
 }
-
 
 // 实际写入文件到归档
 int write_file_to_archive(FILE *archive_fp, const char *filename,

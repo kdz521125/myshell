@@ -1,0 +1,155 @@
+.\" Archive Tool Man Page
+.TH ARCHIVE 1 "December 31, 2025" "v1.0.0" "Archive Tool Manual"
+
+.SH NAME
+archive \- file archiving utility with compression and encryption
+
+.SH SYNOPSIS
+.B archive
+[\fICOMMAND\fR] [\fIOPTIONS\fR] [\fIARGUMENTS\fR]
+
+.SH DESCRIPTION
+\fBarchive\fR is a powerful command-line utility for creating, extracting, 
+and managing archive files with support for compression and encryption. 
+It provides an easy-to-use interface similar to traditional archiving 
+tools like tar and zip, but with modern features and a simple syntax.
+
+.SH COMMANDS
+.TP
+\fBcreate, c\fR
+Create a new archive containing specified files and directories.
+
+.TP
+\fBextract, x\fR
+Extract files from an existing archive to the filesystem.
+
+.TP
+\fBlist, l\fR
+List the contents of an archive without extracting.
+
+.TP
+\fBadd, a\fR
+Add files to an existing archive.
+
+.TP
+\fBremove, r\fR
+Remove files from an existing archive.
+
+.TP
+\fBverify, v\fR
+Verify the integrity of an archive and its contents.
+
+.TP
+\fBupdate, u\fR
+Update files in an archive (only if they have changed).
+
+.TP
+\fBtest, t\fR
+Test an archive for readability and integrity.
+
+.TP
+\fBhelp, h\fR
+Display help information about commands and options.
+
+.TP
+\fBversion, V\fR
+Display version information.
+
+.SH OPTIONS
+.TP
+\fB\-v, \-\-verbose\fR
+Enable verbose output, showing more details about operations.
+
+.TP
+\fB\-q, \-\-quiet\fR
+Enable quiet mode, suppressing all output except errors.
+
+.TP
+\fB\-c \fILEVEL\fR, \-\-compression \fILEVEL\fR
+Set compression level (0-9). 0 means no compression, 1 is fastest, 
+9 is best compression. Default is 6.
+
+.TP
+\fB\-p \fIPASSWORD\fR, \-\-password \fIPASSWORD\fR
+Set password for encryption/decryption.
+
+.TP
+\fB\-n, \-\-no\-progress\fR
+Disable progress display during operations.
+
+.TP
+\fB\-f \fIFILE\fR, \-\-file \fIFILE\fR
+Specify archive filename (alternative syntax).
+
+.TP
+\fB\-C \fIDIR\fR, \-\-directory \fIDIR\fR
+Change to directory DIR before performing operations.
+
+.SH EXAMPLES
+.TP
+.B Create an archive:
+archive create backup.arc file1.txt file2.jpg document.pdf
+
+.TP
+.B Create encrypted archive:
+archive create \-p secret backup.arc sensitive.doc
+
+.TP
+.B Extract archive:
+archive extract backup.arc
+
+.TP
+.B Extract to specific directory:
+archive extract backup.arc /tmp/restored
+
+.TP
+.B List archive contents:
+archive list backup.arc
+
+.TP
+.B Add files to archive:
+archive add backup.arc newfile.txt
+
+.TP
+.B Remove files from archive:
+archive remove backup.arc oldfile.txt
+
+.TP
+.B Verify archive integrity:
+archive verify backup.arc
+
+.SH EXIT STATUS
+Returns 0 on success, 1 on error.
+
+.SH FILES
+.TP
+.I /etc/archive/default.conf
+Default configuration file.
+
+.TP
+.I ~/.archiverc
+User-specific configuration file.
+
+.SH ENVIRONMENT
+.TP
+.B ARCHIVE_PASSWORD
+If set, used as default password for encryption/decryption.
+
+.TP
+.B ARCHIVE_COMPRESSION
+If set, used as default compression level.
+
+.SH SEE ALSO
+.BR tar (1),
+.BR zip (1),
+.BR gzip (1),
+.BR bzip2 (1)
+
+.SH BUGS
+Report bugs to <3488643132@qq.com>.
+
+.SH AUTHOR
+yasso-d Archive Tool Team
+
+.SH COPYRIGHT
+Copyright © 2025 Archive Tool Team. License: MIT.
