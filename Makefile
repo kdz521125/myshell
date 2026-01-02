@@ -6,12 +6,11 @@ CC = gcc
 CFLAGS = -Wall -Wextra -O2 -std=c99 -D_FILE_OFFSET_BITS=64 -fPIC
 LDFLAGS = -lz -lcrypto -lm -L. -larchive
 
-
 # 目标文件
-LIB_SRCS = archiver-tool.c
+LIB_SRCS = archiver_tool.c core/archive.c io/file_ops.c compress/compress.c encrypt/encrypt.c
 LIB_OBJS = $(LIB_SRCS:.c=.o)
 
-TOOL_SRC = archiver-tool.c
+TOOL_SRC = archiver_tool.c
 TOOL_OBJ = $(TOOL_SRC:.c=.o)
 
 # 检测操作系统
@@ -62,7 +61,7 @@ $(TOOL_TARGET): $(TOOL_OBJ) $(LIB_TARGET)
 	$(CC) $(CFLAGS) -o $@ $(TOOL_OBJ)  $(LDFLAGS)
 
 # 编译目标文件
-%.o: %.c archive.h
+%.o: %.c archiver.h
 	$(CC) $(CFLAGS)  -c $< -o $@
 
 # 调试版本
@@ -84,7 +83,7 @@ install: all
 	sudo mkdir -p $(INSTALL_INCLUDE_DIR) $(INSTALL_LIB_DIR) $(INSTALL_BIN_DIR) $(INSTALL_MAN_DIR)
 	
 	# 安装头文件
-	sudo cp archive.h $(INSTALL_INCLUDE_DIR)/
+	sudo cp archiver.h $(INSTALL_INCLUDE_DIR)/
 	sudo chmod 644 $(INSTALL_INCLUDE_DIR)/archiver.h
 	
 	# 安装静态库
@@ -124,7 +123,7 @@ install: all
 uninstall:
 	@echo "卸载Archive Tool..."
 	@echo "需要root权限..."
-	sudo rm -f $(INSTALL_INCLUDE_DIR)/archiver.h
+	sudo rm -f $(INSTALL_INCLUDE_DIR)/archive.h
 	sudo rm -f $(INSTALL_LIB_DIR)/$(STATIC_LIB)
 	sudo rm -f $(INSTALL_LIB_DIR)/$(LIB_TARGET)*
 	sudo rm -f $(INSTALL_BIN_DIR)/$(TOOL_TARGET)

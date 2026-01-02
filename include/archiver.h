@@ -174,8 +174,8 @@ void error_callback(const char *message);
                          uint8_t **output, size_t *output_size,
                          int level);
 // 解压函数
- int decompress_data(const uint8_t *input, size_t input_size,
-                           uint8_t **output, size_t *output_size);
+ //int decompress_data(const uint8_t *input, size_t input_size,
+    //                       uint8_t **output, size_t *output_size);
 // 加密函数
  int encrypt_data(const uint8_t *input, size_t input_size,
                         uint8_t **output, size_t *output_size,

@@ -1,4 +1,5 @@
 #include "archive.h"
+#include "../include/archiver.h"
 
 //初始化archive_init函数
 ArchiveAPI* archive_init(void) {
@@ -523,6 +524,32 @@ int archive_cleanup(ArchiveAPI *api) {
     return ARCHIVE_OK;
 }
 
+const char* archive_strerror(int error_code) {
+    switch (error_code) {
+        case ARCHIVE_OK:
+            return "No error";
+        case ARCHIVE_ERROR_OPEN:
+            return "Failed to open archive file";
+        case ARCHIVE_ERROR_READ:
+            return "Failed to read from archive file";
+        case ARCHIVE_ERROR_WRITE:
+            return "Failed to write to archive file";
+        case ARCHIVE_ERROR_MEMORY:
+            return "Memory allocation error";
+        case ARCHIVE_ERROR_INVALID:
+            return "Invalid archive format";
+        case ARCHIVE_ERROR_NOT_FOUND:
+            return "File not found in archive";
+        case ARCHIVE_ERROR_COMPRESSION:
+            return "Compression/decompression error";
+        case ARCHIVE_ERROR_ENCRYPTION:
+            return "Encryption/decryption error";
+        case ARCHIVE_ERROR_CORRUPTED:
+            return "Archive is corrupted";
+        default:
+            return "Unknown error";
+    }
+}
 // 进度回调函数
    void progress_callback(int percentage, const char *filename) {
     if (quiet || !progress) return;

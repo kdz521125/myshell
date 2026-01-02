@@ -1,4 +1,5 @@
 #include "include/archiver.h"
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -38,7 +39,7 @@ static int test_archive_tool(int argc, char *argv[]);
 
 void progress_callback(int percentage, const char *filename);
 void error_callback(const char *message);
-int archive_cleanup(ArchiveAPI *api);
+//int archive_cleanup(ArchiveAPI *api);
 
 void close_archive_file(ArchiveFile *af);
 
@@ -50,6 +51,7 @@ const char* archive_strerror(int error_code) ;
 // 自定义 strdup 实现
 char* custom_strdup(const char* str) ;
 // 命令行选项定义
+
 static struct option long_options[] = {
     {"help", no_argument, 0, 'h'},
     {"version", no_argument, 0, 'V'},
@@ -135,7 +137,7 @@ int main(int argc, char *argv[]) {
     
     // 清理资源
     if (API) {
-        archive_cleanup( API);
+        archive_cleanup(API);
     }
     
     if (password) {
