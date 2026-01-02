@@ -1,7 +1,6 @@
 #ifndef ARCHIVER_H
 #define ARCHIVER_H
-//公共头文件
-
+#include "../io/buffer.h"
 
 
 #include<stdio.h>
@@ -17,6 +16,12 @@
 #include <dirent.h>
 #include <errno.h>
 #include <sys/types.h>
+#include <sys/time.h>
+#include <stddef.h>
+#include <limits.h>
+
+
+
 
 // 归档文件格式版本
 #define ARCHIVE_FORMAT_VERSION 0x0100  // 1.0
@@ -28,8 +33,8 @@
 #define FLAG_SYMLINK       0x08  // 符号链接
 #define FLAG_MODIFIED      0x10  // 文件已修改
 
-static int quiet = 0;
-static int progress = 1;
+ int quiet = 0;
+ int progress = 1;
 
 // 错误代码定义
 typedef enum {
@@ -94,8 +99,8 @@ typedef struct {
 typedef struct {
     CompressionLevel compression_level;
     char *password;
-    ProgressCallback progress_callback;
-    ErrorCallback error_callback;
+   // ProgressCallback progress_callback;
+  //  ErrorCallback error_callback;
     FILE *log_file;
     ArchiveFile *current_archive;
     MemoryBuffer *write_buffer;
@@ -133,7 +138,8 @@ typedef struct {
 
 // 初始化函数
 ArchiveAPI* archive_init(void);
-void archive_cleanup(ArchiveAPI *api);
+int archive_cleanup(ArchiveAPI *api);
+
 
 // 工具函数
 const char* archive_strerror(int error_code);
@@ -141,45 +147,44 @@ int archive_get_file_count(const char *archive);
 
 
 // 进度回调函数类型
-typedef void (*ProgressCallback)(int percentage, const char *filename);
-typedef void (*ErrorCallback)(const char *message);
+void progress_callback(int percentage, const char *filename);
+void error_callback(const char *message);
+//typedef void (*ProgressCallback)(int percentage, const char *filename);
+//typedef void (*ErrorCallback)(const char *message);
 
 // 打开归档文件（内部使用）
-static ArchiveFile* open_archive_file(const char *filename, const char *mode);
+ ArchiveFile* open_archive_file(const char *filename, const char *mode);
 // 关闭归档文件
-static void close_archive_file(ArchiveFile *af);
+ void close_archive_file(ArchiveFile *af);
 // 实际的create函数实现
-static int archive_create(ArchiveContext *ctx, const char *archive, char **files, int count);
+ int archive_create(ArchiveContext *ctx, const char *archive, char **files, int count);
 // 实际的extract函数实现
-static int archive_extract(ArchiveContext *ctx, const char *archive, const char *dest);
+ int archive_extract(ArchiveContext *ctx, const char *archive, const char *dest);
 // 实际的list函数实现
-static int archive_list(ArchiveContext *ctx, const char *archive);
+ int archive_list(ArchiveContext *ctx, const char *archive);
 // 添加文件到现有归档
-static int archive_add(ArchiveContext *ctx, const char *archive, char **files, int count);
+ int archive_add(ArchiveContext *ctx, const char *archive, char **files, int count);
 // 验证归档完整性
-static int archive_verify(ArchiveContext *ctx, const char *archive);
-static int archive_remove(const char *archive, char **files, int count);
-static int archive_update(const char *archive, char **files, int count);
-static int archive_test(const char *archive);
+ int archive_verify(ArchiveContext *ctx, const char *archive);
+ int archive_remove(const char *archive, char **files, int count);
+ int archive_update(const char *archive, char **files, int count);
+ int archive_test(const char *archive);
 // 压缩函数
-static int compress_data(const uint8_t *input, size_t input_size,
+ int compress_data(const uint8_t *input, size_t input_size,
                          uint8_t **output, size_t *output_size,
                          int level);
 // 解压函数
-static int decompress_data(const uint8_t *input, size_t input_size,
+ int decompress_data(const uint8_t *input, size_t input_size,
                            uint8_t **output, size_t *output_size);
 // 加密函数
-static int encrypt_data(const uint8_t *input, size_t input_size,
+ int encrypt_data(const uint8_t *input, size_t input_size,
                         uint8_t **output, size_t *output_size,
                         const char *password);
 // 解密函数
-static int decrypt_data(const uint8_t *input, size_t input_size,
+ int decrypt_data(const uint8_t *input, size_t input_size,
                         uint8_t **output, size_t *output_size,
                         const char *password);
 
-// 进度回调函数
-static void progress_callback(int percentage, const char *filename);
-// 错误回调函数
-static void error_callback(const char *message);
+
 
 #endif // ARCHIVER_H

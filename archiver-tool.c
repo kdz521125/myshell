@@ -1,4 +1,4 @@
-#include "archive.h"
+#include "include/archiver.h"
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -16,11 +16,13 @@ static int verbose = 0;
 
 static int compression_level = 6;
 static char *password = NULL;
-static ArchiveAPI *api = NULL;
+ArchiveAPI *API = NULL;
 static ArchiveContext ctx;
 
 
-// 函数声明
+
+// 函数工具声明
+
 static void print_usage_tool(void);
 static void print_version_tool(void);
 static void print_help_tool(void);
@@ -30,15 +32,23 @@ static int extract_archive_tool(int argc, char *argv[]);
 static int list_archive_tool(int argc, char *argv[]);
 static int add_files_tool(int argc, char *argv[]);
 static int remove_files_tool(int argc, char *argv[]);
-static int verify_archive(int argc, char *argv[]);
+static int verify_archive_tool(int argc, char *argv[]);
 static int update_archive_tool(int argc, char *argv[]);
 static int test_archive_tool(int argc, char *argv[]);
-static void progress_callback_tool(int percentage, const char *filename);
-static void error_callback_tool(const char *message);
-static char** expand_wildcards_tool(const char *pattern, int *count);
-static int is_directory_tool(const char *path);
-static int recursive_add_tool(const char *archive, const char *path);
 
+void progress_callback(int percentage, const char *filename);
+void error_callback(const char *message);
+int archive_cleanup(ArchiveAPI *api);
+
+void close_archive_file(ArchiveFile *af);
+
+//static char** expand_wildcards_tool(const char *pattern, int *count);
+//static int is_directory_tool(const char *path);
+//static int recursive_add_tool(const char *archive, const char *path);
+
+const char* archive_strerror(int error_code) ;
+// 自定义 strdup 实现
+char* custom_strdup(const char* str) ;
 // 命令行选项定义
 static struct option long_options[] = {
     {"help", no_argument, 0, 'h'},
@@ -65,33 +75,33 @@ int main(int argc, char *argv[]) {
     int ret = 0;
     
     // 解析命令行参数
-    if (parse_arguments(argc, argv) != 0) {
+    if (parse_arguments_tool(argc, argv) != 0) {
         return 1;
     }
     
     // 如果没有指定子命令，显示帮助
     if (argc < 2) {
-        print_usage();
+        print_usage_tool();
         return 0;
     }
     
     // 初始化归档API
-    api = archive_init();
-    if (!api) {
+    API = archive_init();
+    if (!API) {
         fprintf(stderr, "Failed to initialize archive library\n");
         return 1;
     }
     
     // 设置回调函数
-    api->progress_callback = progress ? progress_callback : NULL;
-    api->error_callback = error_callback;
+   // api->progress_callback = progress ? progress_callback : NULL;
+   // api->error_callback = error_callback;
     
     // 设置压缩级别
-    api->set_compression(compression_level);
+    API->set_compression(compression_level);
     
     // 设置密码（如果有）
     if (password) {
-        api->set_encryption(password);
+        API->set_encryption(password);
     }
     
     // 根据子命令执行相应操作
@@ -124,8 +134,8 @@ int main(int argc, char *argv[]) {
     }
     
     // 清理资源
-    if (api) {
-        archive_cleanup(api);
+    if (API) {
+        archive_cleanup( API);
     }
     
     if (password) {
@@ -137,7 +147,7 @@ int main(int argc, char *argv[]) {
 }
 
 // 解析命令行参数
-static int parse_arguments(int argc, char *argv[]) {
+static int parse_arguments_tool(int argc, char *argv[]) {
     int opt;
     int option_index = 0;
     
@@ -145,10 +155,10 @@ static int parse_arguments(int argc, char *argv[]) {
                               long_options, &option_index)) != -1) {
         switch (opt) {
             case 'h':
-                print_help();
+                print_help_tool();
                 exit(0);
             case 'V':
-                print_version();
+                print_version_tool();
                 exit(0);
             case 'v':
                 verbose = 1;
@@ -165,7 +175,7 @@ static int parse_arguments(int argc, char *argv[]) {
                 }
                 break;
             case 'p':
-                password = strdup(optarg);
+                password = custom_strdup(optarg);
                 break;
             case 'n':
                 progress = 0;
@@ -180,6 +190,18 @@ static int parse_arguments(int argc, char *argv[]) {
     }
     
     return 0;
+}
+
+
+
+// 自定义 strdup 实现
+char* custom_strdup(const char* str) {
+    if (str == NULL) return NULL;
+    size_t len = strlen(str) + 1;
+    char* new_str = (char*)malloc(len);
+    if (new_str == NULL) return NULL;
+    strcpy(new_str, str);
+    return new_str;
 }
 
 // 创建归档文件
@@ -206,7 +228,7 @@ static int create_archive_tool(int argc, char *argv[]) {
         }
     }
     
-    int result = api->create(archive_name, files, file_count);
+    int result =  API->create(archive_name, files, file_count);
     if (result != ARCHIVE_ERROR_OPEN) {
         fprintf(stderr, "Failed to create archive: %s\n", archive_strerror(result));
         return 1;
@@ -251,7 +273,7 @@ static int extract_archive_tool(int argc, char *argv[]) {
             return 1;
         }
     }
-    int result = api->extract(&ctx,archive_name, dest_dir);
+    int result =  API->extract(&ctx,archive_name, dest_dir);
     if (result != ARCHIVE_OK) {
         fprintf(stderr, "Failed to extract archive: %s\n", archive_strerror(result));
         return 1;
@@ -266,6 +288,8 @@ static int extract_archive_tool(int argc, char *argv[]) {
 
 // 列出归档内容
 static int list_archive_tool(int argc, char *argv[]) {
+
+    
     if (argc < 1) {
         fprintf(stderr, "Usage: archive list <archive>\n");
         return 1;
@@ -278,7 +302,7 @@ static int list_archive_tool(int argc, char *argv[]) {
         fprintf(stderr, "Archive not found: %s\n", archive_name);
         return 1;
     }
-    int result = api->list(&ctx, archive_name);
+    int result =  API->list(&ctx, archive_name);
     if (result != ARCHIVE_OK) {
         fprintf(stderr, "Failed to list archive: %s\n", archive_strerror(result));
         return 1;
@@ -314,7 +338,7 @@ static int add_files_tool(int argc, char *argv[]) {
         return 1;
     }
     
-    int result = api->add(archive_name, files, file_count);
+    int result =  API->add(archive_name, files, file_count);
     if (result != ARCHIVE_OK) {
         fprintf(stderr, "Failed to add files: %s\n", archive_strerror(result));
         return 1;
@@ -354,7 +378,7 @@ static int remove_files_tool(int argc, char *argv[]) {
         return 1;
     }
     
-    int result = api->remove(archive_name, files, file_count);
+    int result =  API->remove(archive_name, files, file_count);
     if (result != ARCHIVE_OK) {
         fprintf(stderr, "Failed to remove files: %s\n", archive_strerror(result));
         return 1;
@@ -386,7 +410,7 @@ static int verify_archive_tool(int argc, char *argv[]) {
         return 1;
     }
     
-    int result = api->verify(archive_name);
+    int result =  API->verify(archive_name);
     if (result != ARCHIVE_OK) {
         fprintf(stderr, "Archive verification failed: %s\n", archive_strerror(result));
         return 1;
@@ -426,7 +450,7 @@ static int update_archive_tool(int argc, char *argv[]) {
         return 1;
     }
     
-    int result = api->update(archive_name, files, file_count);
+    int result =  API->update(archive_name, files, file_count);
     if (result != ARCHIVE_OK) {
         fprintf(stderr, "Failed to update files: %s\n", archive_strerror(result));
         return 1;
@@ -458,7 +482,7 @@ static int test_archive_tool(int argc, char *argv[]) {
         return 1;
     }
     
-    int result = api->test(archive_name);
+    int result =  API->test(archive_name);
     if (result != ARCHIVE_OK) {
         fprintf(stderr, "Archive test failed: %s\n", archive_strerror(result));
         return 1;
@@ -472,6 +496,32 @@ static int test_archive_tool(int argc, char *argv[]) {
 }
 
 
+const char* archive_strerror(int error_code) {
+    switch (error_code) {
+        case ARCHIVE_OK:
+            return "No error";
+        case ARCHIVE_ERROR_OPEN:
+            return "Failed to open archive file";
+        case ARCHIVE_ERROR_READ:
+            return "Failed to read from archive file";
+        case ARCHIVE_ERROR_WRITE:
+            return "Failed to write to archive file";
+        case ARCHIVE_ERROR_MEMORY:
+            return "Memory allocation error";
+        case ARCHIVE_ERROR_INVALID:
+            return "Invalid archive format";
+        case ARCHIVE_ERROR_NOT_FOUND:
+            return "File not found in archive";
+        case ARCHIVE_ERROR_COMPRESSION:
+            return "Compression/decompression error";
+        case ARCHIVE_ERROR_ENCRYPTION:
+            return "Encryption/decryption error";
+        case ARCHIVE_ERROR_CORRUPTED:
+            return "Archive is corrupted";
+        default:
+            return "Unknown error";
+    }
+}
 
 // 打印使用说明
 static void print_usage_tool(void) {
@@ -526,7 +576,7 @@ static void print_help_tool(void) {
 }
 
 // 打印版本信息
-static void print_version_tool(void) {
+ void print_version_tool(void){
     printf("Archive Tool v%s\n", VERSION);
     printf("Copyright (c) %s\n", AUTHOR);
     printf("A powerful file archiving utility with compression and encryption support\n");

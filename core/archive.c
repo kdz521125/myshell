@@ -27,6 +27,7 @@ ArchiveAPI* archive_init(void) {
     api->test = archive_test;   // 未实现
     api->set_compression = compress_data;
     api->set_encryption = encrypt_data;
+
     api->progress_callback = progress_callback;
     api->error_callback = error_callback;
     api->context = ctx; // 设置上下文指针
@@ -34,9 +35,19 @@ ArchiveAPI* archive_init(void) {
     return api;
 }
 
+int archive_cleanup(ArchiveAPI *api) {
+    if (!api) return -1;
+    
+    if (api->context) {
+        free(api->context);
+    }
+    
+    free(api);
+    return 0;
+}
 
 // 打开归档文件（内部使用）
-static ArchiveFile* open_archive_file(const char *filename, const char *mode) {
+  ArchiveFile* open_archive_file(const char *filename, const char *mode) {
     ArchiveFile *af = malloc(sizeof(ArchiveFile));
     if (!af) return NULL;
     
@@ -87,7 +98,7 @@ static ArchiveFile* open_archive_file(const char *filename, const char *mode) {
 }
 
 // 关闭归档文件
-static void close_archive_file(ArchiveFile *af) {
+  void close_archive_file(ArchiveFile *af) {
     if (!af) return;
     
     if (af->fp) {
@@ -105,7 +116,7 @@ static void close_archive_file(ArchiveFile *af) {
 }
 
 // 实际的create函数实现
-static int archive_create(ArchiveContext *ctx, const char *archive, char **files, int count) {
+  int archive_create(ArchiveContext *ctx, const char *archive, char **files, int count) {
     if (!archive || !files || count <= 0) {
         report_error(ctx, "Invalid parameters for create");
         return ARCHIVE_ERROR_INVALID;
@@ -167,7 +178,7 @@ static int archive_create(ArchiveContext *ctx, const char *archive, char **files
 }
 
 // 实际的extract函数实现
-static int archive_extract(ArchiveContext *ctx, const char *archive, const char *dest) {
+  int archive_extract(ArchiveContext *ctx, const char *archive, const char *dest) {
     if (!archive) {
         report_error(ctx, "Archive filename is NULL");
         return ARCHIVE_ERROR_INVALID;
@@ -207,7 +218,7 @@ static int archive_extract(ArchiveContext *ctx, const char *archive, const char 
 }
 
 // 实际的list函数实现
-static int archive_list(ArchiveContext *ctx, const char *archive) {
+  int archive_list(ArchiveContext *ctx, const char *archive) {
     if (!archive) {
         report_error(ctx, "Archive filename is NULL");
         return ARCHIVE_ERROR_INVALID;
@@ -255,7 +266,7 @@ static int archive_list(ArchiveContext *ctx, const char *archive) {
 }
 
 // 添加文件到现有归档
-static int archive_add(ArchiveContext *ctx, const char *archive, char **files, int count) {
+  int archive_add(ArchiveContext *ctx, const char *archive, char **files, int count) {
     // 1. 打开现有归档读取所有内容
     // 2. 创建临时文件
     // 3. 写入原有文件
@@ -311,7 +322,7 @@ static int archive_add(ArchiveContext *ctx, const char *archive, char **files, i
 }
 
 // 验证归档完整性
-static int archive_verify(ArchiveContext *ctx, const char *archive) {
+  int archive_verify(ArchiveContext *ctx, const char *archive) {
     ArchiveFile *af = open_archive_file(archive, "rb");
     if (!af) {
         return ARCHIVE_ERROR_OPEN;
@@ -376,32 +387,11 @@ static int archive_verify(ArchiveContext *ctx, const char *archive) {
         return ARCHIVE_ERROR_CORRUPTED;
     }
 }
-// 进度回调函数
-static void progress_callback(int percentage, const char *filename) {
-    if (quiet || !progress) return;
-    
-    static int last_percentage = -1;
-    if (percentage != last_percentage) {
-        if (filename && *filename) {
-            printf("\rProgress: %3d%% - %-30s", percentage, filename);
-        } else {
-            printf("\rProgress: %3d%%", percentage);
-        }
-        fflush(stdout);
-        
-        if (percentage >= 100) {
-            printf("\n");
-        }
-        last_percentage = percentage;
-    }
-}
 
-// 错误回调函数
-static void error_callback(const char *message) {
-    fprintf(stderr, "Error: %s\n", message);
-}
 
-static int archive_remove(const char *archive, char **files, int count) {
+
+
+  int archive_remove(const char *archive, char **files, int count) {
     // 1. 打开现有归档读取所有内容
     // 2. 创建临时文件
     // 3. 写入未删除的文件
@@ -457,7 +447,7 @@ static int archive_remove(const char *archive, char **files, int count) {
     
     return ARCHIVE_OK;
 }
-static int archive_update(const char *archive, char **files, int count) {
+  int archive_update(const char *archive, char **files, int count) {
     // 1. 打开现有归档读取所有内容
     // 2. 创建临时文件
     // 3. 写入原有文件（更新指定文件）
@@ -516,7 +506,7 @@ static int archive_update(const char *archive, char **files, int count) {
     
     return ARCHIVE_OK;
 }
-static int archive_test(const char *archive) {
+  int archive_test(const char *archive) {
     // 简单测试归档能否打开和读取头信息
     ArchiveFile *af = open_archive_file(archive, "rb");
     if (!af) {
@@ -531,4 +521,28 @@ static int archive_test(const char *archive) {
     
     close_archive_file(af);
     return ARCHIVE_OK;
+}
+
+// 进度回调函数
+   void progress_callback(int percentage, const char *filename) {
+    if (quiet || !progress) return;
+    
+      int last_percentage = -1;
+    if (percentage != last_percentage) {
+        if (filename && *filename) {
+            printf("\rProgress: %3d%% - %-30s", percentage, filename);
+        } else {
+            printf("\rProgress: %3d%%", percentage);
+        }
+        fflush(stdout);
+        
+        if (percentage >= 100) {
+            printf("\n");
+        }
+        last_percentage = percentage;
+    }
+}
+// 错误回调函数
+   void error_callback(const char *message) { 
+    fprintf(stderr, "Error: %s\n", message);
 }

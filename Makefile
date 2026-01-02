@@ -3,11 +3,12 @@
 
 # 编译器设置
 CC = gcc
-CFLAGS = -Wall -Wextra -O2 -std=c99 -D_FILE_OFFSET_BITS=64
-LDFLAGS = -lz -lcrypto -lm
+CFLAGS = -Wall -Wextra -O2 -std=c99 -D_FILE_OFFSET_BITS=64 -fPIC
+LDFLAGS = -lz -lcrypto -lm -L. -larchive
+
 
 # 目标文件
-LIB_SRCS = archive.c
+LIB_SRCS = archiver-tool.c
 LIB_OBJS = $(LIB_SRCS:.c=.o)
 
 TOOL_SRC = archiver-tool.c
@@ -58,11 +59,11 @@ $(STATIC_LIB): $(LIB_OBJS)
 
 # 构建命令行工具
 $(TOOL_TARGET): $(TOOL_OBJ) $(LIB_TARGET)
-	$(CC) $(CFLAGS) -o $@ $(TOOL_OBJ) -L. -larchive $(LDFLAGS)
+	$(CC) $(CFLAGS) -o $@ $(TOOL_OBJ)  $(LDFLAGS)
 
 # 编译目标文件
 %.o: %.c archive.h
-	$(CC) $(CFLAGS) -fPIC -c $< -o $@
+	$(CC) $(CFLAGS)  -c $< -o $@
 
 # 调试版本
 debug: CFLAGS += -g -DDEBUG
@@ -84,7 +85,7 @@ install: all
 	
 	# 安装头文件
 	sudo cp archive.h $(INSTALL_INCLUDE_DIR)/
-	sudo chmod 644 $(INSTALL_INCLUDE_DIR)/archive.h
+	sudo chmod 644 $(INSTALL_INCLUDE_DIR)/archiver.h
 	
 	# 安装静态库
 	sudo cp $(STATIC_LIB) $(INSTALL_LIB_DIR)/
@@ -123,7 +124,7 @@ install: all
 uninstall:
 	@echo "卸载Archive Tool..."
 	@echo "需要root权限..."
-	sudo rm -f $(INSTALL_INCLUDE_DIR)/archive.h
+	sudo rm -f $(INSTALL_INCLUDE_DIR)/archiver.h
 	sudo rm -f $(INSTALL_LIB_DIR)/$(STATIC_LIB)
 	sudo rm -f $(INSTALL_LIB_DIR)/$(LIB_TARGET)*
 	sudo rm -f $(INSTALL_BIN_DIR)/$(TOOL_TARGET)

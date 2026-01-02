@@ -2,7 +2,7 @@
 
 
 // AES加密（简单实现）
-static int encrypt_data(const uint8_t *input, size_t input_size,
+ int encrypt_data(const uint8_t *input, size_t input_size,
                        uint8_t **output, size_t *output_size,
                        const char *password) {
     // 简单实现：实际应使用更安全的加密
@@ -31,7 +31,7 @@ static int encrypt_data(const uint8_t *input, size_t input_size,
 }
 
 // AES解密
-static int decrypt_data(const uint8_t *input, size_t input_size,
+ int decrypt_data(const uint8_t *input, size_t input_size,
                        uint8_t **output, size_t *output_size,
                        const char *password) {
     if (input_size % AES_BLOCK_SIZE != 0) {

@@ -1,7 +1,7 @@
 #include "compress.h"
 
 // 使用zlib压缩数据
-static int compress_data(const uint8_t *input, size_t input_size,
+ int compress_data(const uint8_t *input, size_t input_size,
                         uint8_t **output, size_t *output_size,
                         int compression_level) {
     if (compression_level == 0) {
@@ -29,7 +29,7 @@ static int compress_data(const uint8_t *input, size_t input_size,
     return 1;
 }
 // 解压数据
-static int decompress_data(const uint8_t *input, size_t input_size,
+ int decompress_data(const uint8_t *input, size_t input_size,
                           uint8_t **output, size_t output_size) {
     *output = malloc(output_size);
     if (!*output) return 0;
