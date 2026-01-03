@@ -1,7 +1,8 @@
 #ifndef ARCHIVER_H
 #define ARCHIVER_H
-#include "../io/buffer.h"
 
+#include "buffer.h"
+#include "file_ops.h"
 
 #include<stdio.h>
 #include<stdlib.h>
@@ -33,8 +34,9 @@
 #define FLAG_SYMLINK       0x08  // 符号链接
 #define FLAG_MODIFIED      0x10  // 文件已修改
 
- int quiet = 0;
- int progress = 1;
+ extern int quiet;
+ extern int progress;
+
 
 // 错误代码定义
 typedef enum {
@@ -95,28 +97,15 @@ typedef struct {
     int is_modified;
 } ArchiveFile;
 
-// 扩展ArchiveContext
-typedef struct {
-    CompressionLevel compression_level;
-    char *password;
-   // ProgressCallback progress_callback;
-  //  ErrorCallback error_callback;
-    FILE *log_file;
-    ArchiveFile *current_archive;
-    MemoryBuffer *write_buffer;
 
-    int recursive;  // 是否递归添加目录
-    char **exclude_patterns;  // 排除模式
-    int exclude_count;
-} ArchiveContext;
 
 
 // 核心接口
 typedef struct {
     // 归档操作
     int (*create)(const char *archive, char **files, int count);
-    int (*extract)(ArchiveContext *ctx, const char *archive, const char *dest);
-    int (*list)(ArchiveContext *ctx,const char *archive);
+    int (*extract)(const char *archive, const char *dest);
+    int (*list)(const char *archive);
     int (*add)(const char *archive, char **files, int count);
     int (*remove)(const char *archive, char **files, int count);
     
@@ -136,6 +125,22 @@ typedef struct {
     void *context;
 } ArchiveAPI;
 
+// 扩展ArchiveContext
+typedef struct {
+    CompressionLevel compression_level;
+    char *password;
+   // ProgressCallback progress_callback;
+  //  ErrorCallback error_callback;
+    FILE *log_file;
+    ArchiveFile *current_archive;
+    MemoryBuffer *write_buffer;
+
+    int recursive;  // 是否递归添加目录
+    char **exclude_patterns;  // 排除模式
+    int exclude_count;
+    ArchiveAPI *api; // 指向API结构体的指针
+    
+} ArchiveContext;
 // 初始化函数
 ArchiveAPI* archive_init(void);
 int archive_cleanup(ArchiveAPI *api);
@@ -185,6 +190,17 @@ void error_callback(const char *message);
                         uint8_t **output, size_t *output_size,
                         const char *password);
 
+void report_error(ArchiveContext *ctx, const char *message);
+void report_progress(ArchiveContext *ctx, int percentage, const char *filename);
 
 
+uint32_t calculate_crc32(const uint8_t *data, size_t length);
+// 实际写入文件到归档
+int write_file_to_archive(FILE *archive_fp, const char *filename,
+                         CompressionLevel compression_level,
+                         const char *password);
+// 从归档读取文件
+
+int read_file_from_archive(FILE *archive_fp, const FileEntry *entry,
+                            const char *dest_path, const char *password);   
 #endif // ARCHIVER_H

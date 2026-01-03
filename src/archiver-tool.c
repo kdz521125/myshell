@@ -1,4 +1,5 @@
-#include "include/archiver.h"
+#include "../include/archiver.h"
+#include "../include/file_ops.h"
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -37,8 +38,8 @@ static int verify_archive_tool(int argc, char *argv[]);
 static int update_archive_tool(int argc, char *argv[]);
 static int test_archive_tool(int argc, char *argv[]);
 
-void progress_callback(int percentage, const char *filename);
-void error_callback(const char *message);
+//void progress_callback(int percentage, const char *filename);
+//void error_callback(const char *message);
 //int archive_cleanup(ArchiveAPI *api);
 
 void close_archive_file(ArchiveFile *af);
@@ -275,7 +276,7 @@ static int extract_archive_tool(int argc, char *argv[]) {
             return 1;
         }
     }
-    int result =  API->extract(&ctx,archive_name, dest_dir);
+    int result =  API->extract(archive_name, dest_dir);
     if (result != ARCHIVE_OK) {
         fprintf(stderr, "Failed to extract archive: %s\n", archive_strerror(result));
         return 1;
@@ -304,7 +305,7 @@ static int list_archive_tool(int argc, char *argv[]) {
         fprintf(stderr, "Archive not found: %s\n", archive_name);
         return 1;
     }
-    int result =  API->list(&ctx, archive_name);
+    int result =  API->list(archive_name);
     if (result != ARCHIVE_OK) {
         fprintf(stderr, "Failed to list archive: %s\n", archive_strerror(result));
         return 1;
@@ -498,32 +499,6 @@ static int test_archive_tool(int argc, char *argv[]) {
 }
 
 
-const char* archive_strerror(int error_code) {
-    switch (error_code) {
-        case ARCHIVE_OK:
-            return "No error";
-        case ARCHIVE_ERROR_OPEN:
-            return "Failed to open archive file";
-        case ARCHIVE_ERROR_READ:
-            return "Failed to read from archive file";
-        case ARCHIVE_ERROR_WRITE:
-            return "Failed to write to archive file";
-        case ARCHIVE_ERROR_MEMORY:
-            return "Memory allocation error";
-        case ARCHIVE_ERROR_INVALID:
-            return "Invalid archive format";
-        case ARCHIVE_ERROR_NOT_FOUND:
-            return "File not found in archive";
-        case ARCHIVE_ERROR_COMPRESSION:
-            return "Compression/decompression error";
-        case ARCHIVE_ERROR_ENCRYPTION:
-            return "Encryption/decryption error";
-        case ARCHIVE_ERROR_CORRUPTED:
-            return "Archive is corrupted";
-        default:
-            return "Unknown error";
-    }
-}
 
 // 打印使用说明
 static void print_usage_tool(void) {

@@ -1,4 +1,4 @@
-#include "buffer.h"
+#include "../include/buffer.h"
 
 // 创建内存缓冲区
  MemoryBuffer* create_buffer(size_t initial_capacity) {

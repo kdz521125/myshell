@@ -1,4 +1,4 @@
-#include "encrypt.h"
+#include "../include/encrypt.h"
 
 
 // AES加密（简单实现）

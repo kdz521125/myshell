@@ -1,4 +1,4 @@
-#include "compress.h"
+#include "../include/compress.h"
 
 // 使用zlib压缩数据
  int compress_data(const uint8_t *input, size_t input_size,
